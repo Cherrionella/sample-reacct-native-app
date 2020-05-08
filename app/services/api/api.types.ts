@@ -5,5 +5,10 @@ export interface User {
   name: string
 }
 
-export type GetUsersResult = { kind: "ok"; users: User[] } | GeneralApiProblem
-export type GetUserResult = { kind: "ok"; user: User } | GeneralApiProblem
+export interface Rate {
+  currencySrc: string,
+  currencyDst: string,
+  rate: number
+}
+
+export type GetExchangeRateResult = { kind: "ok", data: Rate } | GeneralApiProblem

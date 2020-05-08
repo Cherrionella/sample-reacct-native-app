@@ -1,78 +1,48 @@
 import * as React from "react"
-import { View, Image, ViewStyle, TextStyle, ImageStyle, SafeAreaView } from "react-native"
+import {
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent, ScrollView,
+  View,
+  ViewStyle,
+} from "react-native"
 import { ParamListBase } from "@react-navigation/native"
 import { NativeStackNavigationProp } from "react-native-screens/native-stack"
-import { Button, Header, Screen, Text, Wallpaper } from "../../components"
-import { color, spacing } from "../../theme"
-const bowserLogo = require("./bowser.png")
+import { CurrencyCard, Screen } from "../../components"
+import { color } from "../../theme"
+import { useStores } from "../../models/root-store"
+import { useCallback, useEffect, useState } from "react"
+import { autorun } from "mobx"
+import { generateRainbowColors } from "../../utils/color"
+import { ITEM_MARGIN } from "../../components/currency-card/currency-card.styles"
+import { useStickyItem } from "../../hooks/useStickyItem"
 
 const FULL: ViewStyle = { flex: 1 }
 const CONTAINER: ViewStyle = {
-  backgroundColor: color.transparent,
-  paddingHorizontal: spacing[4],
+  backgroundColor: color.transparent
 }
-const TEXT: TextStyle = {
-  color: color.palette.white,
-  fontFamily: "Montserrat",
+const TOP_STICKY_ITEM: ViewStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  marginTop: 0,
+  zIndex: 2
 }
-const BOLD: TextStyle = { fontWeight: "bold" }
-const HEADER: TextStyle = {
-  paddingTop: spacing[3],
-  paddingBottom: spacing[4] + spacing[1],
-  paddingHorizontal: 0,
+const BOTTOM_STICKY_ITEM: ViewStyle = {
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  marginBottom: 0
 }
-const HEADER_TITLE: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 12,
-  lineHeight: 15,
-  textAlign: "center",
-  letterSpacing: 1.5,
-}
-const TITLE_WRAPPER: TextStyle = {
-  ...TEXT,
-  textAlign: "center",
-}
-const TITLE: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 28,
-  lineHeight: 38,
-  textAlign: "center",
-}
-const ALMOST: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 26,
-  fontStyle: "italic",
-}
-const BOWSER: ImageStyle = {
-  alignSelf: "center",
-  marginVertical: spacing[5],
-  maxWidth: "100%",
-}
-const CONTENT: TextStyle = {
-  ...TEXT,
-  color: "#BAB6C8",
-  fontSize: 15,
-  lineHeight: 22,
-  marginBottom: spacing[5],
-}
-const CONTINUE: ViewStyle = {
-  paddingVertical: spacing[4],
-  paddingHorizontal: spacing[4],
-  backgroundColor: "#5D2555",
-}
-const CONTINUE_TEXT: TextStyle = {
-  ...TEXT,
-  ...BOLD,
-  fontSize: 13,
-  letterSpacing: 2,
-}
-const FOOTER: ViewStyle = { backgroundColor: "#20162D" }
-const FOOTER_CONTENT: ViewStyle = {
-  paddingVertical: spacing[4],
-  paddingHorizontal: spacing[4],
+const LOADER_CONTAINER: ViewStyle = {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center'
 }
 
 export interface WelcomeScreenProps {
@@ -80,41 +50,80 @@ export interface WelcomeScreenProps {
 }
 
 export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props => {
-  const nextScreen = React.useMemo(() => () => props.navigation.navigate("demo"), [
-    props.navigation,
-  ])
+  const store = useStores()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [colors, setColors] = useState(generateRainbowColors(0, 0.5, 1))
+
+  const [
+    showBottom,
+    showTop,
+    handleLayout,
+    handleListLayout,
+    handleScroll
+  ] = useStickyItem(19)
+
+  const renderListItem = useCallback(({ item, index }) => <CurrencyCard
+    onLayout={index === 0 ? handleLayout : null}
+    key={item[0].toString()}
+    color={item}
+    text={store.exchange.rates[index] ? store.exchange.rates[index].text : null}
+  />, [store.exchange.rates, handleLayout])
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoading(true)
+        const resp = await store.exchange.loadRate("BTC", "ETH")
+        if (resp.kind !== "ok") {
+          setError(resp.message ? resp.message : `Неизвестная ошибка при загрузке данных "${resp.kind}"`)
+        }
+      } catch (e) {
+        setError(e.message)
+      } finally {
+        setIsLoading(false)
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    return autorun(() => {
+      if (store.exchange.rates.length !== colors.length) {
+        setColors(generateRainbowColors(store.exchange.rates.length, 0.5, 1))
+      }
+    })
+  }, [])
+
+  if (isLoading) {
+    return <View style={FULL}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    </View>
+  }
 
   return (
     <View style={FULL}>
-      <Wallpaper />
-      <Screen style={CONTAINER} preset="scroll" backgroundColor={color.transparent}>
-        <Header headerTx="welcomeScreen.poweredBy" style={HEADER} titleStyle={HEADER_TITLE} />
-        <Text style={TITLE_WRAPPER}>
-          <Text style={TITLE} text="Your new app, " />
-          <Text style={ALMOST} text="almost" />
-          <Text style={TITLE} text="!" />
-        </Text>
-        <Text style={TITLE} preset="header" tx="welcomeScreen.readyForLaunch" />
-        <Image source={bowserLogo} style={BOWSER} />
-        <Text style={CONTENT}>
-          This probably isn't what your app is going to look like. Unless your designer handed you
-          this screen and, in that case, congrats! You're ready to ship.
-        </Text>
-        <Text style={CONTENT}>
-          For everyone else, this is where you'll see a live preview of your fully functioning app
-          using Ignite.
-        </Text>
+      <Screen style={CONTAINER} preset="fixed" backgroundColor={color.transparent}>
+        {error ? <CurrencyCard color={[0, 0.5, 0.5]} text={error} /> : null}
+        {!error && showTop && colors.length >= 20 ? <CurrencyCard
+          color={colors[19]}
+          text={store.exchange.rates[19] ? store.exchange.rates[19].text : null}
+          style={TOP_STICKY_ITEM}
+        /> : null}
+        {!error ? <FlatList
+          onLayout={handleListLayout}
+          onScroll={handleScroll}
+          data={colors}
+          renderItem={renderListItem}
+          keyExtractor={item => item[0].toString()}
+        /> : null}
+        {!error && showBottom && colors.length >= 20 ? <CurrencyCard
+          color={colors[19]}
+          text={store.exchange.rates[19] ? store.exchange.rates[19].text : null}
+          style={BOTTOM_STICKY_ITEM}
+        /> : null}
       </Screen>
-      <SafeAreaView style={FOOTER}>
-        <View style={FOOTER_CONTENT}>
-          <Button
-            style={CONTINUE}
-            textStyle={CONTINUE_TEXT}
-            tx="welcomeScreen.continue"
-            onPress={nextScreen}
-          />
-        </View>
-      </SafeAreaView>
     </View>
   )
 }

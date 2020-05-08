@@ -1,16 +1,16 @@
 import * as React from "react"
 import { storiesOf } from "@storybook/react-native"
 import { StoryScreen, Story, UseCase } from "../../../storybook/views"
-import { Wallpaper } from "./wallpaper"
+import { CurrencyCard } from "./currency-card"
 
-declare let module
+declare var module
 
-storiesOf("Wallpaper", module)
+storiesOf("CurrencyCard", module)
   .addDecorator(fn => <StoryScreen>{fn()}</StoryScreen>)
   .add("Style Presets", () => (
     <Story>
-      <UseCase text="default/stretch" usage="Full screen wallpaper image.">
-        <Wallpaper />
+      <UseCase text="Primary" usage="The primary.">
+        <CurrencyCard text="CurrencyCard" />
       </UseCase>
     </Story>
   ))

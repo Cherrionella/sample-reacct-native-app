@@ -44,12 +44,12 @@ export class Api {
     })
   }
 
-  /**
-   * Gets a list of users.
-   */
-  async getUsers(): Promise<Types.GetUsersResult> {
+  async getExchangeRate (src: string, dst: string): Promise<Types.GetExchangeRateResult> {
     // make the api call
-    const response: ApiResponse<any> = await this.apisauce.get(`/users`)
+    const response: ApiResponse<any> = await this.apisauce.post(`/calc/fx`, {
+      ccy1: src,
+      ccy2: dst
+    })
 
     // the typical ways to die when calling an api
     if (!response.ok) {
@@ -57,44 +57,19 @@ export class Api {
       if (problem) return problem
     }
 
-    const convertUser = raw => {
+    const convertRate = raw => {
       return {
-        id: raw.id,
-        name: raw.name,
+        currencySrc: src,
+        currencyDst: dst,
+        rate: raw[0]
       }
     }
 
     // transform the data into the format we are expecting
     try {
-      const rawUsers = response.data
-      const resultUsers: Types.User[] = rawUsers.map(convertUser)
-      return { kind: "ok", users: resultUsers }
-    } catch {
-      return { kind: "bad-data" }
-    }
-  }
-
-  /**
-   * Gets a single user by ID
-   */
-
-  async getUser(id: string): Promise<Types.GetUserResult> {
-    // make the api call
-    const response: ApiResponse<any> = await this.apisauce.get(`/users/${id}`)
-
-    // the typical ways to die when calling an api
-    if (!response.ok) {
-      const problem = getGeneralApiProblem(response)
-      if (problem) return problem
-    }
-
-    // transform the data into the format we are expecting
-    try {
-      const resultUser: Types.User = {
-        id: response.data.id,
-        name: response.data.name,
-      }
-      return { kind: "ok", user: resultUser }
+      const rawRates = response.data
+      const resultRate: Types.Rate = convertRate(rawRates)
+      return { kind: "ok", data: resultRate }
     } catch {
       return { kind: "bad-data" }
     }
