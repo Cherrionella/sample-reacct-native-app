@@ -68,15 +68,12 @@ export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = () => 
   useEffect(() => {
     (async () => {
       try {
+        setError(null)
         setIsLoading(true)
-        const resp = await store.exchange.loadRate("BTC", "ETH")
-        if (resp.kind !== "ok") {
-          setError(resp.message ? resp.message : `Неизвестная ошибка при загрузке данных "${resp.kind}"`)
-        }
+        await store.exchange.loadRate("BTC", "ETH")
+        setIsLoading(false)
       } catch (e) {
         setError(e.message)
-      } finally {
-        setIsLoading(false)
       }
     })()
   }, [])

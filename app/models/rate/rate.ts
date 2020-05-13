@@ -12,7 +12,10 @@ export const RateModel = types
   })
   .views(self => ({
     get text () {
-      return `${self.currencySrc}/${self.currencyDst}: ${self.rate.toFixed(10)}`
+      if (self.rate !== -1) {
+        return `${self.currencySrc}/${self.currencyDst}: ${self.rate.toFixed(10)}`
+      }
+      return "Не удалось загрузить данные"
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

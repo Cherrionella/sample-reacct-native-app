@@ -14,10 +14,17 @@ export const ExchangeModel = types
   .views(self => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .extend(withEnvironment)
   .actions(self => ({
+    replaceRates: (currencySrc: string, currencyDst: string, rate: number) => {
+      self.rates.replace(times(() => RateModel.create({ currencySrc, currencyDst, rate }), 50))
+    }
+  }))
+  .actions(self => ({
     loadRate: flow(function * loadRate(src: string, dst: string) {
       const result = yield self.environment.api.getExchangeRate(src, dst)
       if (result.kind === "ok") {
-        self.rates.replace(times(() => RateModel.create(result.data), 50))
+        self.replaceRates(result.data.currencySrc, result.data.currencyDst, result.data.rate)
+      } else {
+        self.replaceRates(result.data.currencySrc, result.data.currencyDst, -1)
       }
 
       return result
