@@ -1,11 +1,7 @@
 import * as React from "react"
 import {
   ActivityIndicator,
-  Animated,
   FlatList,
-  LayoutChangeEvent,
-  NativeScrollEvent,
-  NativeSyntheticEvent, ScrollView,
   View,
   ViewStyle,
 } from "react-native"
@@ -17,7 +13,6 @@ import { useStores } from "../../models/root-store"
 import { useCallback, useEffect, useState } from "react"
 import { autorun } from "mobx"
 import { generateRainbowColors } from "../../utils/color"
-import { ITEM_MARGIN } from "../../components/currency-card/currency-card.styles"
 import { useStickyItem } from "../../hooks/useStickyItem"
 
 const FULL: ViewStyle = { flex: 1 }
@@ -49,7 +44,7 @@ export interface WelcomeScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>
 }
 
-export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props => {
+export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = () => {
   const store = useStores()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -96,7 +91,7 @@ export const WelcomeScreen: React.FunctionComponent<WelcomeScreenProps> = props 
 
   if (isLoading) {
     return <View style={FULL}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={LOADER_CONTAINER}>
         <ActivityIndicator size="large" />
       </View>
     </View>
