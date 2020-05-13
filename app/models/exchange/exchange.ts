@@ -24,7 +24,7 @@ export const ExchangeModel = types
       if (result.kind === "ok") {
         self.replaceRates(result.data.currencySrc, result.data.currencyDst, result.data.rate)
       } else {
-        self.replaceRates(result.data.currencySrc, result.data.currencyDst, -1)
+        self.replaceRates(src, dst, -1)
       }
 
       return result
