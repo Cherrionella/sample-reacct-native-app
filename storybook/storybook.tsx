@@ -12,7 +12,7 @@ const StorybookUI = getStorybookUI({
   host: "localhost",
   onDeviceUI: true,
 
-  asyncStorage: require("@react-native-community/async-storage").default,
+  asyncStorage: require("@react-native-community/async-storage").default || null,
 })
 
 export const StorybookUIRoot: React.FunctionComponent = () => {
